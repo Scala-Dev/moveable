@@ -1106,6 +1106,7 @@ export function checkSnapDrag(
         [right, top],
         [left, bottom],
         [right, bottom],
+        ...poses
     ];
 
     if (snapCenter) {

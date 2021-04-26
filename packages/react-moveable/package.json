@@ -1,5 +1,5 @@
 {
-    "name": "react-moveable",
+    "name": "@scala-universal/react-moveable",
     "version": "0.27.5",
     "description": "A React Component that create Moveable, Draggable, Resizable, Scalable, Rotatable, Warpable, Pinchable, Groupable.",
     "main": "./dist/moveable.cjs.js",
