@@ -207,6 +207,7 @@ export function renderSnapPoses(
                 sizeValue: size,
                 zoom: zoom!,
                 direction: direction,
+                canvasPos: pos,
             },
             React
         );
