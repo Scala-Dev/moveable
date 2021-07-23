@@ -201,6 +201,7 @@ export interface RenderGuidelineInfo {
     sizeValue: number;
     posValue: number[];
     zoom: number;
+    canvasPos?: number;
 }
 export interface RenderGuidelineInnerInfo {
     key?: string;
@@ -211,6 +212,7 @@ export interface RenderGuidelineInnerInfo {
     sizeValue: number;
     posValue: number[];
     zoom: number;
+    canvasPos?: number;
 }
 export type ExcludeKeys<T extends IObject<any>, U> = Pick<T, Exclude<keyof T, U>>;
 

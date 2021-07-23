@@ -76,19 +76,22 @@ export function getElementGuidelineDist(
 }
 
 export function renderGuideline(info: RenderGuidelineInfo, React: Renderer): any {
-    const { direction, classNames, size, pos, zoom, key } = info;
+    const { direction, classNames, size, pos, zoom, key, canvasPos } = info;
     const isHorizontal = direction === "horizontal";
     const scaleDirection = isHorizontal ? "Y" : "X";
     // const scaleDirection2 = isHorizontal ? "Y" : "X";
 
-    return React.createElement("div", {
+    const props: any = {
         key,
         className: classNames.join(" "),
         style: {
             [isHorizontal ? "width" : "height"]: `${size}`,
             transform: `translate(${pos[0]}, ${pos[1]}) translate${scaleDirection}(-50%) scale${scaleDirection}(${zoom})`,
         },
-    });
+    };
+    if (canvasPos !== undefined) props['data-canvas-pos'] = canvasPos;
+
+    return React.createElement("div", props);
 }
 
 export function renderInnerGuideline(info: RenderGuidelineInnerInfo, React: Renderer): any {
@@ -340,6 +343,7 @@ export function renderGuidelines(
                 posValue: renderPos,
                 sizeValue: size,
                 zoom: zoom!,
+                canvasPos: direction === 'horizontal' ? pos[0] : pos[1],
             },
             React
         );
