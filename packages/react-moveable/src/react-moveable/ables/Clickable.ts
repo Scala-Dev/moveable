@@ -3,21 +3,30 @@ import {
     ClickableProps, OnClick, OnClickGroup,
 } from "../types";
 import { triggerEvent, fillParams } from "../utils";
-import { findIndex } from "@daybrush/utils";
+import { addEvent, findIndex, removeEvent } from "@daybrush/utils";
+import { makeAble } from "./AbleManager";
 
-export default {
-    name: "clickable",
-    props: {} as const,
+export default makeAble("clickable", {
+    props: {},
     events: {
         onClick: "click",
         onClickGroup: "clickGroup",
     } as const,
     always: true,
-    dragStart() {},
+    dragStart(moveable: MoveableManagerInterface, e: any) {
+        if (!e.isRequest) {
+            addEvent(window, "click", moveable.onPreventClick, true);
+        }
+    },
+    dragControlStart(moveable: MoveableManagerInterface, e: any) {
+        this.dragStart(moveable, e);
+    },
     dragGroupStart(moveable: MoveableManagerInterface<ClickableProps>, e: any) {
+        this.dragStart(moveable, e);
         e.datas.inputTarget = e.inputEvent && e.inputEvent.target;
     },
     dragEnd(moveable: MoveableManagerInterface<ClickableProps>, e: any) {
+        this.endEvent(moveable);
         const target = moveable.state.target!;
         const inputEvent = e.inputEvent;
         const inputTarget = e.inputTarget;
@@ -39,6 +48,7 @@ export default {
         }));
     },
     dragGroupEnd(moveable: MoveableGroupInterface<ClickableProps>, e: any) {
+        this.endEvent(moveable);
         const inputEvent = e.inputEvent;
         const inputTarget = e.inputTarget;
 
@@ -69,7 +79,21 @@ export default {
             containsTarget,
         }));
     },
-} as const;
+    dragControlEnd(moveable: MoveableManagerInterface<ClickableProps>) {
+        this.endEvent(moveable);
+    },
+    dragGroupControlEnd(moveable: MoveableManagerInterface<ClickableProps>) {
+        this.endEvent(moveable);
+    },
+    endEvent(moveable: MoveableManagerInterface<ClickableProps>) {
+        requestAnimationFrame(() => {
+            this.unset(moveable);
+        });
+    },
+    unset(moveable: MoveableManagerInterface<ClickableProps>) {
+        removeEvent(window, "click", moveable.onPreventClick, true);
+    },
+});
 
 /**
  * When you click on the element, the `click` event is called.

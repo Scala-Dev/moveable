@@ -1,5 +1,5 @@
 import {
-    throttle, getDirection, triggerEvent, multiply2,
+    getDirection, triggerEvent, multiply2,
     fillParams, getDistSize, fillEndParams, directionCondition,
 } from "../utils";
 import { MIN_SCALE } from "../consts";
@@ -10,8 +10,8 @@ import {
     getScaleDist,
     fillTransformStartEvent,
     fillTransformEvent,
-    setDefaultTransformIndex,
     getAbsolutePosition,
+    setDefaultTransformIndex,
 } from "../gesto/GestoUtils";
 import { renderAllDirections, renderDiagonalDirections } from "../renderDirections";
 import {
@@ -22,13 +22,16 @@ import {
 } from "../types";
 import {
     fillChildEvents,
-    triggerChildAble,
+    triggerChildAbles,
 } from "../groupUtils";
 import Draggable from "./Draggable";
 import { calculate, createRotateMatrix, plus, minus } from "@scena/matrix";
 import CustomGesto from "../gesto/CustomGesto";
 import { checkSnapScale } from "./Snappable";
-import { isArray, IObject, getRad, getDist } from "@daybrush/utils";
+import {
+    isArray, IObject, getRad, getDist,
+    throttle,
+} from "@daybrush/utils";
 
 /**
  * @namespace Scalable
@@ -86,8 +89,6 @@ export default {
         if (!isPinch) {
             setDragStart(moveable, e);
         }
-        setDefaultTransformIndex(e);
-
         datas.datas = {};
         datas.transform = targetTransform;
         datas.prevDist = [1, 1];
@@ -96,7 +97,19 @@ export default {
         datas.height = height;
         datas.startValue = [1, 1];
 
+        const scaleWidth = getDist(pos1, pos2);
+        const scaleHeight = getDist(pos2, pos4);
         const isWidth = (!direction[0] && !direction[1]) || direction[0] || !direction[1];
+
+
+        datas.scaleWidth = scaleWidth;
+        datas.scaleHeight = scaleHeight;
+        datas.scaleXRatio = scaleWidth / width;
+        datas.scaleYRatio = scaleHeight / height;
+
+        setDefaultTransformIndex(e, "scale");
+
+
 
         datas.isWidth = isWidth;
 
@@ -162,6 +175,8 @@ export default {
             isWidth,
             ratio,
             fixedDirection,
+            scaleXRatio,
+            scaleYRatio,
         } = datas;
 
         if (!isScale) {
@@ -179,8 +194,6 @@ export default {
         }
         const keepRatio = ratio && (moveable.props.keepRatio || parentKeepRatio);
         const state = moveable.state;
-        // const startWidth = width * startValue[0];
-        // const startHeight = height * startValue[1];
 
         let scaleX = 1;
         let scaleY = 1;
@@ -207,31 +220,33 @@ export default {
             }
         } else {
             const dragDist = getDragDist({ datas, distX, distY });
-
-            let distWidth = sizeDirection[0] * dragDist[0];
-            let distHeight = sizeDirection[1] * dragDist[1];
+            let distScaleWidth = sizeDirection[0] * dragDist[0] * scaleXRatio;
+            let distScaleHeight = sizeDirection[1] * dragDist[1] * scaleYRatio;
 
             if (keepRatio && width && height) {
-                const rad = getRad([0, 0], dragDist);
-                const standardRad = getRad([0, 0], sizeDirection);
-                const size = getDistSize([distWidth, distHeight]);
-                const signSize = Math.cos(rad - standardRad) * size;
-
                 if (!sizeDirection[0]) {
                     // top, bottom
-                    distHeight = signSize;
-                    distWidth = distHeight / ratio;
+                    // distHeight = signSize;
+                    distScaleWidth = distScaleHeight * ratio;
                 } else if (!sizeDirection[1]) {
                     // left, right
-                    distWidth = signSize;
-                    distHeight = distWidth * ratio;
+                    // distWidth = signSize;
+                    distScaleHeight = distScaleWidth / ratio;
                 } else {
+                    const size = getDistSize([distScaleWidth, distScaleHeight]);
+
                     // two-way
-                    distHeight = distWidth * ratio;
+                    const dragRad = getRad([0, 0], dragDist);
+                    const standardRad = getRad([0, 0], sizeDirection);
+                    const signSize = Math.cos(dragRad - standardRad) * size;
+                    const ratioRad = getRad([0, 0], [ratio, 1]);
+
+                    distScaleWidth = Math.cos(ratioRad) * signSize;
+                    distScaleHeight = Math.sin(ratioRad) * signSize;
                 }
             }
-            scaleX = (width + distWidth) / width;
-            scaleY = (height + distHeight) / height;
+            scaleX = (width + (distScaleWidth / scaleXRatio)) / width;
+            scaleY = (height + (distScaleHeight / scaleYRatio)) / height;
         }
 
         scaleX = sizeDirection[0] || keepRatio ? scaleX * startValue[0] : startValue[0];
@@ -255,6 +270,7 @@ export default {
                 state.snapRenderInfo = { direction, request: e.isRequest };
             }
         }
+
         let snapDist = [0, 0];
 
         if (!isPinch) {
@@ -270,7 +286,7 @@ export default {
 
         if (keepRatio) {
             if (sizeDirection[0] && sizeDirection[1] && snapDist[0] && snapDist[1]) {
-                if (Math.abs(snapDist[0]) > Math.abs(snapDist[1])) {
+                if (Math.abs(snapDist[0] * width) > Math.abs(snapDist[1] * height)) {
                     snapDist[1] = 0;
                 } else {
                     snapDist[0] = 0;
@@ -286,7 +302,6 @@ export default {
                     dist[1] = throttle(dist[1] * startValue[1], throttleScale!) / startValue[1];
                 }
             }
-
             if (
                 (sizeDirection[0] && !sizeDirection[1])
                 || (snapDist[0] && !snapDist[1])
@@ -406,7 +421,7 @@ export default {
 
         datas.moveableScale = moveable.scale;
 
-        const events = triggerChildAble(
+        const events = triggerChildAbles(
             moveable,
             this,
             "dragControlStart",
@@ -453,7 +468,7 @@ export default {
 
         const fixedPosition = datas.fixedPosition;
 
-        const events = triggerChildAble(
+        const events = triggerChildAbles(
             moveable,
             this,
             "dragControl",
@@ -494,7 +509,7 @@ export default {
             return;
         }
         this.dragControlEnd(moveable, e);
-        triggerChildAble(moveable, this, "dragControlEnd", e);
+        triggerChildAbles(moveable, this, "dragControlEnd", e);
 
         const nextParams = fillEndParams<OnScaleGroupEnd>(moveable, e, {
             targets: moveable.props.targets!,

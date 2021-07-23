@@ -1,8 +1,11 @@
 import {
-    throttle, prefix, triggerEvent, fillParams,
+    prefix, triggerEvent, fillParams,
     calculatePosition, fillEndParams, getRotationRad, getRefTargets,
 } from "../utils";
-import { IObject, hasClass, getRad } from "@daybrush/utils";
+import {
+    IObject, hasClass, getRad,
+    throttle,
+} from "@daybrush/utils";
 import {
     RotatableProps, OnRotateGroup, OnRotateGroupEnd,
     Renderer, OnRotateGroupStart, OnRotateStart, OnRotate,
@@ -10,7 +13,7 @@ import {
     SnappableState, MoveableManagerInterface, MoveableGroupInterface, DraggableProps,
     OnDragStart,
 } from "../types";
-import { triggerChildAble } from "../groupUtils";
+import { triggerChildAbles } from "../groupUtils";
 import Draggable from "./Draggable";
 import { minus, plus, rotate as rotateMatrix } from "@scena/matrix";
 import CustomGesto from "../gesto/CustomGesto";
@@ -25,7 +28,7 @@ import {
     resolveTransformEvent,
     getTransformDirection,
 } from "../gesto/GestoUtils";
-import { renderControls } from "../renderDirections";
+import { renderDirectionControls } from "../renderDirections";
 
 /**
  * @namespace Rotatable
@@ -191,7 +194,7 @@ export function getRotationPositions(
     return [pos, rad] as const;
 }
 
-export function dragControlCondition(e: any, moveable: MoveableManagerInterface<RotatableProps>) {
+export function dragControlCondition(moveable: MoveableManagerInterface<RotatableProps>, e: any) {
     if (e.isRequest) {
         return e.requestAble === "rotatable";
     }
@@ -290,7 +293,7 @@ export default {
             );
         }
         if (renderDirections) {
-            jsxs.push(...renderControls(moveable, [], React));
+            jsxs.push(...renderDirectionControls(moveable, [], React));
         }
 
 
@@ -354,7 +357,7 @@ export default {
         datas.startValue = 0;
         datas.datas = {};
 
-        setDefaultTransformIndex(e);
+        setDefaultTransformIndex(e, "rotate");
 
         const params = fillParams<OnRotateStart>(moveable, e, {
             set: (rotatation: number) => {
@@ -515,7 +518,7 @@ export default {
 
         params.set(datas.beforeDirection * moveable.rotation);
 
-        const events = triggerChildAble(
+        const events = triggerChildAbles(
             moveable,
             this,
             "dragControlStart",
@@ -559,7 +562,7 @@ export default {
         const deg = params.beforeDelta;
         const rad = deg / 180 * Math.PI;
 
-        const events = triggerChildAble(
+        const events = triggerChildAbles(
             moveable,
             this,
             "dragControl",
@@ -596,7 +599,7 @@ export default {
         }
 
         this.dragControlEnd(moveable, e);
-        triggerChildAble(moveable, this, "dragControlEnd", e);
+        triggerChildAbles(moveable, this, "dragControlEnd", e);
 
         const nextParams = fillEndParams<OnRotateGroupEnd>(moveable, e, {
             targets: moveable.props.targets!,

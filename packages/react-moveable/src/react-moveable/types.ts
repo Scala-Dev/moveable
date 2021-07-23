@@ -35,7 +35,7 @@ export type AnyObject<T> = (unknown extends T ? IObject<any> : T);
  * @property - The target(s) to drag Moveable target(s) (default: target)
  * @property - Moveable Container. Don't set it. (default: parentElement)
  * @property - Moveable Portal Container to support other frameworks. Don't set it. (default: container)
- * @property - Moveable Root Container (No Transform Container). (default: container)
+ * @property - Moveable Root Container (No Transformed Container). (default: container)
  * @property - Zooms in the elements of a moveable. (default: 1)
  * @property - The default transformOrigin of the target can be set in advance. (default: "")
  * @property - Whether to scale and resize through edge lines. (default: false)
@@ -78,7 +78,12 @@ export interface DefaultOptions {
 export interface MoveableDefaultOptions
     extends DefaultOptions, DragAreaOptions, OriginOptions, PaddingOptions {
 }
-
+export interface MatrixInfo {
+    type: "offset" | "target";
+    target: SVGElement | HTMLElement;
+    matrix?: number[];
+    origin?: number[];
+}
 export type MoveableManagerState<T = {}> = {
     container: SVGElement | HTMLElement | null | undefined;
     target: SVGElement | HTMLElement | null | undefined;
@@ -103,6 +108,7 @@ export type MoveableManagerState<T = {}> = {
     beforeDirection: number;
     direction: number;
     renderPoses: number[][];
+    disableNativeEvent: boolean;
     pos1: number[];
     pos2: number[];
     pos3: number[];
@@ -135,8 +141,9 @@ export interface Renderer {
  * @typedef
  * @memberof Moveable.Snappable
  */
-export interface Guideline {
+export interface SnapGuideline {
     type: "horizontal" | "vertical";
+    hide?: boolean;
     element?: Element | null;
     center?: boolean;
     pos: number[];
@@ -144,7 +151,7 @@ export interface Guideline {
     className?: string;
     sizes?: number[];
     gap?: number;
-    gapGuidelines?: Guideline[];
+    gapGuidelines?: SnapGuideline[];
 }
 export interface SnapBoundInfo {
     isBound: boolean;
@@ -178,7 +185,7 @@ export interface SnapPosInfo {
 export interface SnapGuidelineInfo {
     dist: number;
     offset: number;
-    guideline: Guideline;
+    guideline: SnapGuideline;
 }
 
 /**
@@ -235,9 +242,9 @@ export interface MoveableProps extends
 export interface MoveableDefaultProps extends ExcludeKeys<MoveableDefaultOptions, "target"> {
     target?: MoveableRefType | ArrayFormat<MoveableRefType>;
 }
-export type MoveableRefType<T extends HTMLElement | SVGElement = HTMLElement | SVGElement>
-    = string |(() => T) | MoveableRefObject<T> | T | null | undefined;
-export interface MoveableRefObject<T extends HTMLElement | SVGElement = HTMLElement | SVGElement> {
+export type MoveableRefType<T extends Element = HTMLElement | SVGElement>
+    = string | (() => T) | MoveableRefObject<T> | T | null | undefined;
+export interface MoveableRefObject<T extends Element = HTMLElement | SVGElement> {
     current: T | undefined | null;
 }
 /**
@@ -276,10 +283,15 @@ export interface MoveableOptions extends
 
 export type MoveableState = MoveableManagerState;
 
+/**
+ * @typedef - You can make Able that can work in Moveable.
+ * In Able, you can manage drag events, props, state, fire event props, and render elements.
+ * @memberof Moveable
+ */
 export interface Able<Props extends IObject<any> = IObject<any>, Events extends IObject<any> = IObject<any>> {
     name: string;
-    props: { [key in keyof Props]: any };
-    events: { [key in keyof Events]: string };
+    props?: { [key in keyof Props]: any };
+    events?: { [key in keyof Events]: string };
     // Whether to always include in able. It is recommended to use always in frameworks other than react
     always?: boolean;
     ableGroup?: string;
@@ -287,55 +299,60 @@ export interface Able<Props extends IObject<any> = IObject<any>, Events extends 
     canPinch?: boolean;
     css?: string[];
     // Fired when the event is cleared
-    unset?: (moveable: any) => any;
+    unset?(moveable: any): any;
     // Renders the React DOM structure for the able.
-    render?: (moveable: any, renderer: Renderer) => any;
+    render?(moveable: any, renderer: Renderer): any;
 
     // Operates when a drag event occurs for the single target.
-    dragStart?: (moveable: any, e: GestoTypes.OnDragStart) => any;
-    drag?: (moveable: any, e: GestoTypes.OnDrag) => any;
-    dragEnd?: (moveable: any, e: GestoTypes.OnDragEnd) => any;
+    dragStart?(moveable: any, e: GestoTypes.OnDragStart): any;
+    drag?(moveable: any, e: GestoTypes.OnDrag): any;
+    dragEnd?(moveable: any, e: GestoTypes.OnDragEnd): any;
 
     // Operates when a pinch event occurs for the single target.
-    pinchStart?: (moveable: any, e: GestoTypes.OnPinchStart) => any;
-    pinch?: (moveable: any, e: GestoTypes.OnPinch) => any;
-    pinchEnd?: (moveable: any, e: GestoTypes.OnPinchEnd) => any;
+    pinchStart?(moveable: any, e: GestoTypes.OnPinchStart): any;
+    pinch?(moveable: any, e: GestoTypes.OnPinch): any;
+    pinchEnd?(moveable: any, e: GestoTypes.OnPinchEnd): any;
 
     // Condition that occurs dragControl
-    dragControlCondition?: (e: any, moveable: any) => boolean;
+    dragControlCondition?(moveable: any, e: any): boolean;
     // Operates when a drag event occurs for the moveable control and single target.
-    dragControlStart?: (moveable: any, e: GestoTypes.OnDragStart) => any;
-    dragControl?: (moveable: any, e: GestoTypes.OnDrag) => any;
-    dragControlEnd?: (moveable: any, e: GestoTypes.OnDragEnd) => any;
+    dragControlStart?(moveable: any, e: GestoTypes.OnDragStart): any;
+    dragControl?(moveable: any, e: GestoTypes.OnDrag): any;
+    dragControlEnd?(moveable: any, e: GestoTypes.OnDragEnd): any;
 
     // Condition that occurs dragGroup
-    dragGroupCondition?: (e: any, moveable: any) => boolean;
+    dragGroupCondition?(moveable: any, e: any): boolean;
     // Operates when a drag event occurs for the multi target.
-    dragGroupStart?: (moveable: any, e: GestoTypes.OnDragStart) => any;
-    dragGroup?: (moveable: any, e: GestoTypes.OnDrag) => any;
-    dragGroupEnd?: (moveable: any, e: GestoTypes.OnDragEnd) => any;
+    dragGroupStart?(moveable: any, e: GestoTypes.OnDragStart): any;
+    dragGroup?(moveable: any, e: GestoTypes.OnDrag): any;
+    dragGroupEnd?(moveable: any, e: GestoTypes.OnDragEnd): any;
 
     // Operates when a pinch event occurs for the multi target.
-    pinchGroupStart?: (moveable: any, e: GestoTypes.OnPinchStart) => any;
-    pinchGroup?: (moveable: any, e: GestoTypes.OnPinch) => any;
-    pinchGroupEnd?: (moveable: any, e: GestoTypes.OnPinchEnd) => any;
+    pinchGroupStart?(moveable: any, e: GestoTypes.OnPinchStart): any;
+    pinchGroup?(moveable: any, e: GestoTypes.OnPinch): any;
+    pinchGroupEnd?(moveable: any, e: GestoTypes.OnPinchEnd): any;
 
     // Condition that occurs dragGroupControl
-    dragGroupControlCondition?: (e: any, moveable: any) => boolean;
+    dragGroupControlCondition?(moveable: any, e: any): boolean;
 
     // Operates when a drag event occurs for the moveable control and multi target.
-    dragGroupControlStart?: (moveable: any, e: GestoTypes.OnDragStart) => any;
-    dragGroupControl?: (moveable: any, e: GestoTypes.OnDragStart) => any;
-    dragGroupControlEnd?: (moveable: any, e: GestoTypes.OnDragEnd) => any;
+    dragGroupControlStart?(moveable: any, e: GestoTypes.OnDragStart): any;
+    dragGroupControl?(moveable: any, e: GestoTypes.OnDragStart): any;
+    dragGroupControlEnd?(moveable: any, e: GestoTypes.OnDragEnd): any;
 
     // mouse enter event
-    mouseEnter?: (e: any, moveable: any) => any;
+    mouseEnter?(moveable: any, e: any): any;
     // mouse leave event
-    mouseLeave?: (e: any, moveable: any) => any;
+    mouseLeave?(moveable: any, e: any): any;
+
+    // mouse enter event for group
+    mouseGroupEnter?(moveable: any, e: any): any;
+    // mouse leave event for group
+    mouseGroupLeave?(moveable: any, e: any): any;
 
 
     // Execute the operation of able for external request
-    request?: (moveable: any) => AbleRequester;
+    request?(moveable: any): AbleRequester;
 }
 
 /**
@@ -1269,8 +1286,9 @@ export interface ScalableProps extends ScalableOptions, EventInterface<ScalableE
  * @typedef
  * @memberof Moveable.Snappable
  */
-export interface GapGuideline extends Guideline {
+export interface GapGuideline extends SnapGuideline {
     renderPos: number[];
+    inner?: boolean;
 }
 
 /**
@@ -1388,14 +1406,18 @@ export interface GroupableProps extends GroupableOptions {
  * @typedef
  * @memberof Moveable.Snappable
  * @property - Whether or not target can be snapped to the guideline. (default: false)
+ * @property - A snap container that is the basis for snap, bounds, and innerBounds. (default: null = container)
  * @property - When you drag, make the snap in the center of the target. (default: false)
  * @property - When you drag, make the snap in the horizontal guidelines. (default: true)
  * @property - When you drag, make the snap in the vertical guidelines. (default: true)
  * @property - When you drag, make the snap in the element guidelines. (default: true)
  * @property - When you drag, make the gap snap in the element guidelines. (default: true)
  * @property - Distance value that can snap to guidelines. (default: 5)
+ * @property - If width size is greater than 0, you can vertical snap to the grid. (default: 0)
+ * @property - If height size is greater than 0, you can horizontal snap to the grid. (default: 0)
  * @property - snap distance digits (default: 0)
  * @property - Whether to show snap distance (default: true)
+ * @property - Whether to show element inner snap distance (default: false)
  * @property - Add guidelines in the horizontal direction. (default: [])
  * @property - Add guidelines in the vertical direction. (default: [])
  * @property - Add guidelines for the element. (default: [])
@@ -1405,6 +1427,7 @@ export interface GroupableProps extends GroupableOptions {
  */
 export interface SnappableOptions {
     snappable?: boolean | string[];
+    snapContainer?: MoveableRefType<HTMLElement | SVGElement>;
     snapCenter?: boolean;
     snapHorizontal?: boolean;
     snapVertical?: boolean;
@@ -1412,10 +1435,13 @@ export interface SnappableOptions {
     snapGap?: boolean;
     snapThreshold?: number;
     snapDigit?: number;
+    snapGridWidth?: number;
+    snapGridHeight?: number;
     isDisplaySnapDigit?: boolean;
+    isDisplayInnerSnapDigit?: boolean;
     horizontalGuidelines?: number[];
     verticalGuidelines?: number[];
-    elementGuidelines?: Array<ElementGuidelineValue | Element>;
+    elementGuidelines?: Array<ElementGuidelineValue | MoveableRefType<Element>>;
     bounds?: BoundType;
     innerBounds?: InnerBoundType;
     snapDistFormat?: (distance: number) => number | string;
@@ -1456,8 +1482,8 @@ export interface SnappableProps extends SnappableOptions, EventInterface<Snappab
  * @property - gaps is snapped guidelines that became gap snap between elements.
  */
 export interface OnSnap {
-    guidelines: Guideline[];
-    elements: Guideline[][];
+    guidelines: SnapGuideline[];
+    elements: SnapGuideline[][];
     gaps: GapGuideline[];
 }
 /**
@@ -1473,20 +1499,22 @@ export interface InnerBoundType {
 /**
  * @typedef
  * @memberof Moveable.Snappable
+ * @property - If position is css, right and bottom are calculated as css right and css bottom of container. (default: "client")
  */
 export interface BoundType {
+    position?: "client" | "css";
     left?: number;
     top?: number;
     right?: number;
     bottom?: number;
 }
 export interface SnappableState {
-    staticGuidelines: Guideline[];
+    staticGuidelines: SnapGuideline[];
     elementGuidelineValues: ElementGuidelineValue[];
-    guidelines: Guideline[];
+    guidelines: SnapGuideline[];
+    snapOffset: { left: number, top: number, bottom: number, right: number }
     snapRenderInfo?: SnapRenderInfo | null;
     enableSnap: boolean;
-
 }
 export interface SnapRenderInfo {
     direction?: number[];
@@ -1722,6 +1750,8 @@ export interface MoveableManagerInterface<T = {}, U = {}> extends MoveableInterf
     getContainer(): HTMLElement | SVGElement;
     getRotation(): number;
     forceUpdate(): any;
+    triggerEvent(name: string, params: IObject<any>, isManager?: boolean): any;
+    onPreventClick(e: any): void;
 }
 export interface MoveableGroupInterface<T = {}, U = {}> extends MoveableManagerInterface<T, U> {
     moveables: MoveableManagerInterface[];
@@ -1761,6 +1791,7 @@ export type MoveableEvents = {
     [key in keyof typeof MOVEABLE_EVENTS_MAP]: Parameters<Required<MoveableProps>[typeof MOVEABLE_EVENTS_MAP[key]]>[0];
 };
 
+type a = keyof typeof MOVEABLE_PROPS_MAP;
 export type MoveableProperties = {
     -readonly [key in keyof typeof MOVEABLE_PROPS_MAP]: MoveableProps[key];
 };
@@ -1769,3 +1800,10 @@ export interface SnappableRenderType {
     type: "snap" | "bounds";
     pos: number;
 }
+
+export type ExcludeParams<T>
+    = ExcludeKeys<T, "moveable" | "target" | "clientX" | "clientY" | "inputEvent" | "datas" | "currentTarget">;
+export type ExcludeEndParams<T>
+    = ExcludeKeys<ExcludeParams<T>, "lastEvent" | "isDrag" | "isDouble">;
+export type DefaultProps<Name extends string, AbleObject extends Partial<Able<any, any>>>
+    = AbleObject extends { props: {} } ? AbleObject["props"] : { readonly [key in Name]: BooleanConstructor; };

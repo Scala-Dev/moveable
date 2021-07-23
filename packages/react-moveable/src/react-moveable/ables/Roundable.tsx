@@ -1,6 +1,7 @@
 import {
     prefix, triggerEvent,
     fillParams, fillEndParams, calculatePosition,
+    getComputedStyle,
 } from "../utils";
 import {
     Renderer, RoundableProps, OnRoundStart, RoundableState, OnRound, ControlPose, OnRoundEnd, MoveableManagerInterface,
@@ -88,7 +89,7 @@ function getBorderRadius(
     let values: string[] = [];
 
     if (!state) {
-        const style = window.getComputedStyle(target);
+        const style = getComputedStyle(target);
 
         borderRadius = (style && style.borderRadius) || "";
     } else {
@@ -220,7 +221,7 @@ export default {
                 }}></div>;
         });
     },
-    dragControlCondition(e: any) {
+    dragControlCondition(moveable: any, e: any) {
         if (!e.inputEvent || e.isRequest) {
             return false;
         }
@@ -386,9 +387,9 @@ export default {
                     poses,
                 );
             }
-            triggerEvent<RoundableProps>(moveable, "onRoundEnd",
-                fillEndParams<OnRoundEnd>(moveable, e, {}));
         }
+        triggerEvent<RoundableProps>(moveable, "onRoundEnd",
+            fillEndParams<OnRoundEnd>(moveable, e, {}));
         state.borderRadiusState = "";
         return true;
     },

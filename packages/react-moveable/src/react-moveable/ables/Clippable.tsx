@@ -9,6 +9,7 @@ import {
     fillParams, triggerEvent,
     makeMatrixCSS, getRect, fillEndParams,
     convertCSSSize, moveControlPos,
+    getComputedStyle,
 } from "../utils";
 import { plus, minus } from "@scena/matrix";
 import { setDragStart, getDragDist, calculatePointerDist } from "../gesto/GestoUtils";
@@ -17,7 +18,7 @@ import {
     HORIZONTAL_RADIUS_ORDER, VERTICAL_RADIUS_ORDER, getRadiusStyles, addRadiusPos, removeRadiusPos,
 } from "./roundable/borderRadius";
 import { renderLine } from "../renderDirections";
-import { addGuidelines, checkSnapBoundPriority } from "./snappable/snap";
+import { getDefaultGuidelines, checkSnapBoundPriority } from "./snappable/snap";
 import { checkSnapBounds } from "./Snappable";
 
 const CLIP_DIRECTIONS = [
@@ -607,7 +608,7 @@ export default {
             ...lines,
         ];
     },
-    dragControlCondition(e: any) {
+    dragControlCondition(moveable: any, e: any) {
         return e.inputEvent && (e.inputEvent.target.getAttribute("class") || "").indexOf("clip") > -1;
     },
     dragStart(moveable: MoveableManagerInterface<ClippableProps, ClippableState>, e: any) {
@@ -734,11 +735,10 @@ export default {
             dists.push([1, 0]);
         }
 
-        const guidelines = addGuidelines(
-            [],
-            width!, height!,
+        const guidelines = getDefaultGuidelines(
             (props.clipHorizontalGuidelines || []).map(v => convertUnitSize(`${v}`, height)),
             (props.clipVerticalGuidelines || []).map(v => convertUnitSize(`${v}`, width)),
+            width!, height!,
         );
         let guideXPoses: number[] = [];
         let guideYPoses: number[] = [];

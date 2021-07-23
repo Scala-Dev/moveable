@@ -96,7 +96,7 @@ export default {
             ...renderAllDirections(moveable, React),
         ];
     },
-    dragControlCondition(e: any) {
+    dragControlCondition(moveable: any, e: any) {
         if (e.isRequest) {
             return false;
         }
@@ -129,10 +129,6 @@ export default {
         datas.direction = direction;
         datas.left = left;
         datas.top = top;
-
-        setDragStart(moveable, e);
-        setDefaultTransformIndex(e);
-
         datas.poses = [
             [0, 0],
             [width, 0],
@@ -145,6 +141,9 @@ export default {
         datas.prevMatrix = createIdentityMatrix(4);
         datas.absolutePoses = getAbsolutePosesByState(state);
         datas.posIndexes = getPosIndexesByDirection(direction);
+
+        setDragStart(moveable, e);
+        setDefaultTransformIndex(e, "matrix3d");
 
         state.snapRenderInfo = {
             request: e.isRequest,

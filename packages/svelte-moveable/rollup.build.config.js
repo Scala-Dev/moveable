@@ -6,6 +6,7 @@ const defaultOptions = {
     input: './src/index.js',
     external: {
         "svelte": "svelte",
+        "moveable": "moveable",
     },
     plugins: [
         svelte(),
@@ -14,12 +15,15 @@ const defaultOptions = {
 export default buildHelper([
     {
         ...defaultOptions,
-        output: "dist/moveable.cjs.js",
+        input: './src/index.umd.js',
+        output: "dist/moveable.umd.js",
+        exports: "default",
         format: "cjs",
     },
     {
         ...defaultOptions,
         output: "dist/moveable.esm.js",
+        exports: "named",
         format: "es",
     },
 ]);

@@ -17,6 +17,86 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 * Add `setTransform`, `setTransformIndex` event properties.
 * Expand the functions of `translate` and `rotate` properties.
 
+## [0.26.0] - 2021-07-11
+* `moveable` 0.26.0
+* `react-moveable` 0.29.0
+* `preact-moveable` 0.28.0
+* `ngx-moveable` 0.22.0
+* `svelte-moveable` 0.17.0
+* `lit-moveable` 0.3.0
+* `vue-moveable` 2.0.0-beta.0
+* `vue3-moveable` 0.1.0
+
+### Added
+* Add `vue-moveable` package
+* Add `vue3-moveable` package
+* Support multi state
+
+### Fixed
+* Fix svg matrix #498
+* prevent click event for capturing #490
+* Fix types
+
+
+## [0.25.3] - 2021-06-18
+* `moveable` 0.25.3
+* `react-moveable` 0.28.3
+* `preact-moveable` 0.27.3
+* `ngx-moveable` 0.21.3
+* `svelte-moveable` 0.16.3
+* `lit-moveable` 0.2.3
+
+### Fixed
+* Fix snap to grid (bottom) #491
+* Prevent click event #490
+* Fix Native Event for dragArea or group
+* Fix start original transform
+
+
+## [0.25.2] - 2021-06-16
+* `moveable` 0.25.2
+* `react-moveable` 0.28.2
+* `preact-moveable` 0.27.2
+* `ngx-moveable` 0.21.2
+* `svelte-moveable` 0.16.2
+* `lit-moveable` 0.2.2
+
+### Fixed
+* Fixed the problem that left and top dashed guidelines were not visible
+
+
+## [0.25.1] - 2021-06-16
+* `moveable` 0.25.1
+* `react-moveable` 0.28.1
+* `preact-moveable` 0.27.1
+* `ngx-moveable` 0.21.1
+* `svelte-moveable` 0.16.1
+* `lit-moveable` 0.2.1
+
+### Added
+* Add `snapContainer` prop #487
+* Add `snapGridWidth`, `snapGridHeight` props #482
+* Add `isDisplayInnerSnapDigit` prop #456
+
+
+### Fixed
+* Support svg able #462
+* Support start transform for 1.0.0
+* Remove overlapping guidelines
+
+
+## [0.24.6] - 2021-04-21
+* `moveable` 0.24.6
+* `react-moveable` 0.27.7
+* `preact-moveable` 0.26.5
+* `ngx-moveable` 0.20.6
+* `svelte-moveable` 0.15.
+* `lit-moveable` 0.1.6
+
+### Fixed
+* Fix svg transform container #446
+* Fix onRoundEnd event #440
+
 ## [0.24.5] - 2021-03-30
 * `moveable` 0.24.5
 * `react-moveable` 0.27.5

@@ -1,5 +1,13 @@
 import { makeArgType, makeLink } from "../utils";
 
+export const SCALE_CONTROLS = {
+    "containerScale": makeArgType({
+        type: "number",
+        description: "container's scale",
+        defaultValue: 1,
+    }),
+};
+
 export const DEFAULT_CONTROLS = {
     padding: makeArgType({
         type: "object",
@@ -131,7 +139,146 @@ export const DEFAULT_ROTATABLE_CONTROLS = {
                 "right-top",
                 "left-bottom",
                 "right-bottom",
+                "none",
             ],
         },
+    }),
+};
+export const DEFAULT_WARPABLE_CONTROLS = {
+    warpable: makeArgType({
+        type: "boolean",
+        description: makeLink("Warpable", "warpable"),
+        defaultValue: true,
+    }),
+    renderDirections: makeArgType({
+        type: "array",
+        description: makeLink("Warpable", "renderDirections"),
+        defaultValue: ["nw", "n", "ne", "w", "e", "sw", "s", "se"],
+    }),
+};
+
+export const DEFAULT_SNAPPABLE_CONTROLS = {
+    snappable: makeArgType({
+        type: "boolean",
+        description: makeLink("Snappable", "snappable"),
+        defaultValue: true,
+    }),
+    snapCenter: makeArgType({
+        type: "boolean",
+        description: makeLink("Snappable", "snapCenter"),
+        defaultValue: false,
+    }),
+    snapHorizontal: makeArgType({
+        type: "boolean",
+        description: makeLink("Snappable", "snapHorizontal"),
+        defaultValue: true,
+    }),
+    snapVertical: makeArgType({
+        type: "boolean",
+        description: makeLink("Snappable", "snapVertical"),
+        defaultValue: true,
+    }),
+    snapThreshold: makeArgType({
+        type: "number",
+        description: makeLink("Snappable", "snapThreshold"),
+        defaultValue: 5,
+    }),
+};
+export const DEFAULT_SNAPPABLE_GUIDELINES_CONTROLS = {
+    verticalGuidelines: makeArgType({
+        type: "object",
+        description: makeLink("Snappable", "verticalGuidelines"),
+        defaultValue: [0, 100, 200, 400, 500],
+    }),
+    horizontalGuidelines: makeArgType({
+        type: "object",
+        description: makeLink("Snappable", "horizontalGuidelines"),
+        defaultValue: [0, 100, 200, 400, 500],
+    }),
+};
+export const DEFAULT_SNAPPABLE_ELEMENTS_CONTROLS = {
+    snapGap: makeArgType({
+        type: "boolean",
+        description: makeLink("Snappable", "snapGap"),
+        defaultValue: true,
+    }),
+    isDisplaySnapDigit: makeArgType({
+        type: "boolean",
+        description: makeLink("Snappable", "isDisplaySnapDigit"),
+        defaultValue: true,
+    }),
+    isDisplayInnerSnapDigit: makeArgType({
+        type: "boolean",
+        description: makeLink("Snappable", "isDisplayInnerSnapDigit"),
+        defaultValue: false,
+    }),
+    snapDigit: makeArgType({
+        type: "number",
+        description: makeLink("Snappable", "snapDigit"),
+        defaultValue: 0,
+    }),
+};
+export const DEFAULT_SNAP_GRID_CONTROLS = {
+    snappable: makeArgType({
+        type: "boolean",
+        description: makeLink("Snappable", "snappable"),
+        defaultValue: true,
+    }),
+    snapGridWidth: makeArgType({
+        type: "number",
+        description: makeLink("Snappable", "snapGridWidth"),
+        defaultValue: 10,
+    }),
+    snapGridHeight: makeArgType({
+        type: "number",
+        description: makeLink("Snappable", "snapGridHeight"),
+        defaultValue: 10,
+    }),
+};
+
+export const DEFAULT_SNAP_CONTAINER_CONTROLS = {
+    snapContainer: makeArgType({
+        type: "text",
+        description: makeLink("Snappable", "snapContainer"),
+        defaultValue: ".snapContainer",
+    }),
+};
+export const DEFAULT_BOUNDS_CONTROLS = {
+    snappable: makeArgType({
+        type: "boolean",
+        description: makeLink("Snappable", "snappable"),
+        defaultValue: true,
+    }),
+    bounds: makeArgType({
+        type: "object",
+        description: makeLink("Snappable", "bounds"),
+        defaultValue: { left: 0, top: 0, right: 0, bottom: 0, position: "css" },
+    }),
+};
+export const DEFAULT_INNER_BOUNDS_CONTROLS = {
+    snappable: makeArgType({
+        type: "boolean",
+        description: makeLink("Snappable", "snappable"),
+        defaultValue: true,
+    }),
+    bounds: makeArgType({
+        type: "object",
+        description: makeLink("Snappable", "bounds"),
+        defaultValue: { left: 0, top: 0, right: 500, bottom: 500 },
+    }),
+};
+
+
+
+export const DEFAULT_ORIGIN_DRAGGABLE_CONTROLS = {
+    originDraggable: makeArgType({
+        type: "boolean",
+        description: makeLink("OriginDraggable", "originDraggable"),
+        defaultValue: true,
+    }),
+    originRelative: makeArgType({
+        type: "boolean",
+        description: makeLink("OriginDraggable", "originRelative"),
+        defaultValue: true,
     }),
 };

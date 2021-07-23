@@ -1,4 +1,5 @@
 import * as React from "react";
+import { createElement } from "react";
 import { PREFIX } from "./consts";
 import {
     prefix,
@@ -21,7 +22,7 @@ import {
 } from "./types";
 import { triggerAble, getTargetAbleGesto, getAbleGesto } from "./gesto/getAbleGesto";
 import { plus } from "@scena/matrix";
-import { getKeys, IObject } from "@daybrush/utils";
+import { getKeys, IObject, removeEvent } from "@daybrush/utils";
 import { renderLine } from "./renderDirections";
 import { fitPoints, getAreaSize, getOverlapSize, isInside } from "overlap-area";
 import EventManager from "./EventManager";
@@ -63,6 +64,7 @@ export default class MoveableManager<T = {}>
         target: null,
         gesto: null,
         renderPoses: [[0, 0], [0, 0], [0, 0], [0, 0]],
+        disableNativeEvent: false,
         ...getTargetInfo(null),
     };
     public enabledAbles: Able[] = [];
@@ -114,6 +116,7 @@ export default class MoveableManager<T = {}>
                 className={`${prefix("control-box", direction === -1
                     ? "reverse" : "", isDragging ? "dragging" : "")} ${className}`}
                 {...ableAttributes}
+                onClick={this.onPreventClick}
                 portalContainer={portalContainer}
                 style={{
                     "position": "absolute",
@@ -649,6 +652,10 @@ export default class MoveableManager<T = {}>
         }
         return customStyleMap[key];
     }
+    public onPreventClick = (e: any) => {
+        e.stopPropagation();
+        removeEvent(window, "click", this.onPreventClick, true);
+    }
     protected unsetAbles() {
         if (this.targetAbles.filter(able => {
             if (able.unset) {
@@ -699,7 +706,7 @@ export default class MoveableManager<T = {}>
         const props = this.props as any;
         const triggerAblesSimultaneously = props.triggerAblesSimultaneously;
         const Renderer = {
-            createElement: React.createElement,
+            createElement,
         };
 
         return groupByMap(flat<any>(

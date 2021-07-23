@@ -2,7 +2,11 @@ import {
     setDragStart, getBeforeDragDist, getTransformDist,
     convertTransformFormat, resolveTransformEvent, fillTransformStartEvent, setDefaultTransformIndex,
 } from "../gesto/GestoUtils";
-import { throttleArray, triggerEvent, fillParams, throttle, getDistSize, prefix, fillEndParams } from "../utils";
+import {
+    triggerEvent, fillParams,
+    getDistSize, prefix,
+    fillEndParams, getComputedStyle,
+} from "../utils";
 import { minus, plus } from "@scena/matrix";
 import {
     DraggableProps, OnDrag, OnDragGroup,
@@ -11,7 +15,7 @@ import {
 } from "../types";
 import { triggerChildGesto } from "../groupUtils";
 import { checkSnapDrag, startCheckSnapDrag } from "./Snappable";
-import { IObject, getRad } from "@daybrush/utils";
+import { IObject, getRad, throttle, throttleArray } from "@daybrush/utils";
 
 /**
  * @namespace Draggable
@@ -79,7 +83,7 @@ export default {
             return false;
         }
         state.gesto = parentGesto || moveable.targetGesto;
-        const style = window.getComputedStyle(target!);
+        const style = getComputedStyle(target!);
 
         datas.datas = {};
         datas.left = parseFloat(style.left || "") || 0;
@@ -89,7 +93,7 @@ export default {
         datas.startValue = [0, 0];
 
         setDragStart(moveable, e);
-        setDefaultTransformIndex(e);
+        setDefaultTransformIndex(e, "translate");
         startCheckSnapDrag(moveable, datas);
 
         datas.prevDist = [0, 0];

@@ -1,7 +1,8 @@
 import {
-    throttle, getDirection, triggerEvent,
+    getDirection, triggerEvent,
     fillParams, getCSSSize,
     getDistSize, fillEndParams, directionCondition,
+    getComputedStyle,
 } from "../utils";
 import {
     setDragStart,
@@ -17,13 +18,17 @@ import {
 import { renderAllDirections, renderDiagonalDirections } from "../renderDirections";
 import {
     fillChildEvents,
-    triggerChildAble,
+    triggerChildAbles,
 } from "../groupUtils";
 import Draggable from "./Draggable";
 import { calculate, createRotateMatrix, plus } from "@scena/matrix";
 import CustomGesto, { setCustomDrag } from "../gesto/CustomGesto";
-import { checkSnapSize } from "./Snappable";
-import { calculateBoundSize, IObject, isString, getRad, convertUnitSize } from "@daybrush/utils";
+import { checkSnapResize } from "./Snappable";
+import {
+    calculateBoundSize, IObject,
+    isString, getRad, convertUnitSize,
+    throttle,
+} from "@daybrush/utils";
 import { TINY_NUM } from "../consts";
 
 /**
@@ -35,7 +40,6 @@ import { TINY_NUM } from "../consts";
 export default {
     name: "resizable",
     ableGroup: "size",
-    updateRect: true,
     canPinch: true,
     props: {
         resizable: Boolean,
@@ -98,7 +102,7 @@ export default {
         datas.maxSize = [Infinity, Infinity];
 
         if (!parentFlag) {
-            const style = window.getComputedStyle(target);
+            const style = getComputedStyle(target);
 
             const {
                 position,
@@ -120,7 +124,7 @@ export default {
                 containerHeight = container!.clientHeight;
 
                 if (isParentElement) {
-                    const containerStyle = window.getComputedStyle(container!);
+                    const containerStyle = getComputedStyle(container!);
 
                     containerWidth -= parseFloat(containerStyle.paddingLeft) || 0;
                     containerHeight -= parseFloat(containerStyle.paddingTop) || 0;
@@ -340,7 +344,7 @@ export default {
         let snapDist = [0, 0];
 
         if (!isPinch) {
-            snapDist = checkSnapSize(
+            snapDist = checkSnapResize(
                 moveable, nextWidth,
                 nextHeight, direction,
                 fixedPosition,
@@ -520,7 +524,7 @@ export default {
 
             return ev;
         }
-        const events = triggerChildAble(
+        const events = triggerChildAbles(
             moveable,
             this,
             "dragControlStart",
@@ -569,7 +573,7 @@ export default {
         ];
         const fixedPosition = datas.fixedPosition;
 
-        const events = triggerChildAble(
+        const events = triggerChildAbles(
             moveable,
             this,
             "dragControl",
@@ -611,7 +615,7 @@ export default {
         }
 
         this.dragControlEnd(moveable, e);
-        triggerChildAble(moveable, this, "dragControlEnd", e);
+        triggerChildAbles(moveable, this, "dragControlEnd", e);
 
         const nextParams: OnResizeGroupEnd = fillEndParams<OnResizeGroupEnd>(moveable, e, {
             targets: moveable.props.targets!,
