@@ -207,7 +207,7 @@ export function renderSnapPoses(
                 sizeValue: size,
                 zoom: zoom!,
                 direction: direction,
-                canvasPos: pos,
+                canvasPos: Math.round(pos),
             },
             React
         );
@@ -344,7 +344,7 @@ export function renderGuidelines(
                 posValue: renderPos,
                 sizeValue: size,
                 zoom: zoom!,
-                canvasPos: direction === 'horizontal' ? pos[0] : pos[1],
+                canvasPos: Math.round(direction === 'horizontal' ? pos[0] : pos[1]),
             },
             React
         );
