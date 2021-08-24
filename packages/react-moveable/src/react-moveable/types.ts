@@ -643,6 +643,18 @@ export interface OnScaleEnd extends OnEndEvent {
  * @typedef
  * @memberof Moveable.Resizable
  * @extends Moveable.OnEvent
+ * @property - flipped along x axle.
+ * @property - flipped along y axle.
+ */
+export interface OnResizeFlip extends OnEvent {
+    flipX: boolean;
+    flipY: boolean;
+}
+
+/**
+ * @typedef
+ * @memberof Moveable.Resizable
+ * @extends Moveable.OnEvent
  * @property - The direction of resize.
  * @property - resize causes a `dragStart` event.
  * @property - You can set the css width, height value.
@@ -1247,8 +1259,11 @@ export interface ResizableOptions extends RenderDirections {
     resizable?: boolean;
     throttleResize?: number;
     keepRatio?: boolean;
+    canFlip?: boolean;
 }
 export interface ResizableEvents {
+    onResizeFlip: OnResizeFlip;
+
     onResizeStart: OnResizeStart;
     onResize: OnResize;
     onResizeEnd: OnResizeEnd;

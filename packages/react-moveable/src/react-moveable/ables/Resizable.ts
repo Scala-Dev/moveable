@@ -11,7 +11,7 @@ import {
     getAbsolutePosition,
 } from "../gesto/GestoUtils";
 import {
-    ResizableProps, OnResizeGroup, OnResizeGroupEnd,
+    ResizableProps, OnResizeGroup, OnResizeGroupEnd, OnResizeFlip,
     Renderer, OnResizeGroupStart, DraggableProps, OnDrag, OnResizeStart, SnappableState,
     OnResize, OnResizeEnd, MoveableManagerInterface, MoveableGroupInterface, SnappableProps,
 } from "../types";
@@ -21,7 +21,7 @@ import {
     triggerChildAbles,
 } from "../groupUtils";
 import Draggable from "./Draggable";
-import { calculate, createRotateMatrix, plus } from "@scena/matrix";
+import { calculate, createRotateMatrix, plus, minus } from "@scena/matrix";
 import CustomGesto, { setCustomDrag } from "../gesto/CustomGesto";
 import { checkSnapResize } from "./Snappable";
 import {
@@ -46,8 +46,11 @@ export default {
         throttleResize: Number,
         renderDirections: Array,
         keepRatio: Boolean,
+        canFlip: Boolean,
     } as const,
     events: {
+        onResizeFlip: 'resizeFlip',
+
         onResizeStart: "resizeStart",
         onResize: "resize",
         onResizeEnd: "resizeEnd",
@@ -227,6 +230,10 @@ export default {
             startOffsetHeight,
         } = datas;
 
+        // console.log(`*`, datas.absoluteOrigin);
+
+        const canFlip = moveable.props.canFlip &&  moveable.props.target !== null || false;
+
         if (!isResize) {
             return;
         }
@@ -243,9 +250,9 @@ export default {
         if (!direction[0] && !direction[1]) {
             sizeDirection = [1, 1];
         }
+
         const keepRatio = ratio && (moveable.props.keepRatio || parentKeepRatio);
         let fixedPosition = dragClient;
-
 
         if (!dragClient) {
             if (!parentFlag && isPinch) {
@@ -275,10 +282,13 @@ export default {
                 distHeight = parentDistance * startOffsetHeight / startOffsetWidth;
             }
         } else {
+            // console.log(datas.absoluteOrigin, distX, distY);
             const dist = getDragDist({ datas, distX, distY });
 
             distWidth = sizeDirection[0] * dist[0];
             distHeight = sizeDirection[1] * dist[1];
+
+            // console.log(dist, [distWidth, distHeight])
 
             if (keepRatio && startOffsetWidth && startOffsetHeight) {
                 const rad = getRad([0, 0], dist);
@@ -306,32 +316,39 @@ export default {
                     distHeight = Math.sin(ratioRad) * distSize;
                 }
             } else if (!keepRatio) {
-                const nextDirection = [...direction];
+                // console.log('xx')
+                if (!canFlip) {
+                    const nextDirection = [...direction];
 
-                if (!startOffsetWidth) {
-                    if (dist[0] < 0) {
-                        nextDirection[0] = -1;
-                    } else if (dist[0] > 0) {
-                        nextDirection[0] = 1;
+                    if (!startOffsetWidth) {
+                        if (dist[0] < 0) {
+                            nextDirection[0] = -1;
+                        } else if (dist[0] > 0) {
+                            nextDirection[0] = 1;
+                        }
                     }
-                }
-                if (!startOffsetHeight) {
-                    if (dist[1] < 0) {
-                        nextDirection[1] = -1;
-                    } else if (dist[1] > 0) {
-                        nextDirection[1] = 1;
+                    if (!startOffsetHeight) {
+                        if (dist[1] < 0) {
+                            nextDirection[1] = -1;
+                        } else if (dist[1] > 0) {
+                            nextDirection[1] = 1;
+                        }
                     }
+                    direction = nextDirection;
+                    
+                    sizeDirection = nextDirection;
+                    distWidth = sizeDirection[0] * dist[0];
+                    distHeight = sizeDirection[1] * dist[1];
                 }
-                direction = nextDirection;
-                sizeDirection = nextDirection;
-                distWidth = sizeDirection[0] * dist[0];
-                distHeight = sizeDirection[1] * dist[1];
             }
         }
         let nextWidth = sizeDirection[0] || keepRatio
             ? Math.max(startOffsetWidth + distWidth, TINY_NUM) : startOffsetWidth;
         let nextHeight = sizeDirection[1] || keepRatio
             ? Math.max(startOffsetHeight + distHeight, TINY_NUM) : startOffsetHeight;
+
+        const swapX = startOffsetWidth + distWidth < 0;
+        const swapY = startOffsetHeight + distHeight < 0;
 
         if (keepRatio && startOffsetWidth && startOffsetHeight) {
             // startOffsetWidth : startOffsetHeight = nextWidth : nextHeight
@@ -404,6 +421,55 @@ export default {
                 nextHeight = throttle(nextHeight, throttleResize!);
             }
         }
+
+        if ((swapX || swapY) && canFlip) {
+            let flipX = false;
+            let flipY = false;
+            
+            if (swapY) {
+                console.log('swapY')
+                datas.direction[1] = -datas.direction[1];
+                datas.fixedDirection[1] = -datas.fixedDirection[1];
+
+                // -, 0 degree
+                datas.absoluteOrigin[1] += startOffsetHeight * sizeDirection[1];
+
+                // datas.absoluteOrigin = minus(datas.absoluteOrigin, [distX, distY]);
+
+                datas.startOffsetHeight = 0;
+                datas.prevHeight = 0;
+                datas.startHeight = 0;
+
+                flipY = true;
+                return;
+            }  
+            if (swapX) {
+                console.log('swapX')
+                datas.direction[0] = -datas.direction[0];
+                datas.fixedDirection[0] = -datas.fixedDirection[0];
+
+                // -, 0 degree
+                datas.absoluteOrigin[0] += startOffsetWidth * sizeDirection[0];
+
+                // datas.absoluteOrigin = minus(datas.absoluteOrigin, [distX, distY]);
+
+                datas.startOffsetWidth = 0;
+                datas.prevWidth = 0;
+                datas.startWidth = 0;
+
+                flipX = true;
+                return;
+            }
+            
+
+            const params = fillParams<OnResizeFlip>(moveable, e, {
+                flipX,
+                flipY,
+            });
+            triggerEvent<ResizableProps>(moveable, "onResizeFlip", params);
+            return;
+        } 
+
         [nextWidth, nextHeight] = calculateBoundSize(
             [nextWidth, nextHeight],
             minSize,

@@ -20,6 +20,7 @@ export default function App(props: Record<string, any>) {
             rotatable={props.rotatable}
             throttleRotate={props.throttleRotate}
             rotationPosition={props.rotationPosition}
+            canFlip={true}
             onDragGroup={({ events }) => {
                 events.forEach(ev => {
                     ev.target.style.transform = ev.transform;
