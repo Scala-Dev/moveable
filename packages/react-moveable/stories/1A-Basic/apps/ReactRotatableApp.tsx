@@ -3,23 +3,28 @@ import Moveable from "@/react-moveable";
 
 export default function App(props: Record<string, any>) {
     const [translate, setTranslate]  = React.useState([0, 0]);
-    const [rotate, setRotate]  = React.useState(180);
+    const [rotate, setRotate]  = React.useState(0);
     const targetRef = React.useRef<HTMLDivElement>(null);
     const moveableRef = React.useRef<Moveable>(null);
 
     const { width = 100, height = 100 } = moveableRef.current?.moveable.state ?? {};
+    const handleClick = () => {
+        moveableRef?.current?.request("rotatable", { deltaRotate: 45 }, true);
+    }
 
     return (
         <div className="root">
             <div className="container">
+                <div onClick={handleClick}>Click!!</div>
                 <div className="target" ref={targetRef} style={{
-                    transform: `rotate(${180}deg)`,
+                    transform: `rotate(${0}deg)`,
                 }}>100,100<br/>{width}x{height}</div>
                 <Moveable
                     ref={moveableRef}
                     target={targetRef}
                     resizable={true}
                     draggable={true}
+                    keepRatio={true}
                     rotatable={props.rotatable}
                     throttleRotate={props.throttleRotate}
                     rotationPosition={props.rotationPosition}

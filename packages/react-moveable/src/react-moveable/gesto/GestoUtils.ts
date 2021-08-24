@@ -168,26 +168,6 @@ export function getDragDist({ datas, distX, distY }: any, isBefore?: boolean) {
     } = datas;
     const n = is3d ? 4 : 3;
 
-    // console.log(inverseMatrix)
-
-    // console.log(absoluteOrigin)
-
-    // console.log(absoluteOrigin, plus(absoluteOrigin, [distX, distY]))
-    // console.log(calculate(
-    //     isBefore ? inverseBeforeMatrix : inverseMatrix,
-    //     plus(absoluteOrigin, [distX, distY]),
-    //     n,
-    // ))
-    // console.log(minus(
-    //     calculate(
-    //         isBefore ? inverseBeforeMatrix : inverseMatrix,
-    //         plus(absoluteOrigin, [distX, distY]),
-    //         n,
-    //     ),
-    //     isBefore ? startDragBeforeDist : startDragDist,
-    // ))
-    // console.log('=====')
-
     return minus(
         calculate(
             isBefore ? inverseBeforeMatrix : inverseMatrix,

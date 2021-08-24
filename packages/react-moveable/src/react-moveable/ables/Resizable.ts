@@ -21,7 +21,7 @@ import {
     triggerChildAbles,
 } from "../groupUtils";
 import Draggable from "./Draggable";
-import { calculate, createRotateMatrix, plus, minus } from "@scena/matrix";
+import { calculate, createRotateMatrix, plus } from "@scena/matrix";
 import CustomGesto, { setCustomDrag } from "../gesto/CustomGesto";
 import { checkSnapResize } from "./Snappable";
 import {
@@ -230,8 +230,6 @@ export default {
             startOffsetHeight,
         } = datas;
 
-        // console.log(`*`, datas.absoluteOrigin);
-
         const canFlip = moveable.props.canFlip &&  moveable.props.target !== null || false;
 
         if (!isResize) {
@@ -282,13 +280,10 @@ export default {
                 distHeight = parentDistance * startOffsetHeight / startOffsetWidth;
             }
         } else {
-            // console.log(datas.absoluteOrigin, distX, distY);
             const dist = getDragDist({ datas, distX, distY });
 
             distWidth = sizeDirection[0] * dist[0];
             distHeight = sizeDirection[1] * dist[1];
-
-            // console.log(dist, [distWidth, distHeight])
 
             if (keepRatio && startOffsetWidth && startOffsetHeight) {
                 const rad = getRad([0, 0], dist);
@@ -316,7 +311,6 @@ export default {
                     distHeight = Math.sin(ratioRad) * distSize;
                 }
             } else if (!keepRatio) {
-                // console.log('xx')
                 if (!canFlip) {
                     const nextDirection = [...direction];
 
@@ -342,6 +336,7 @@ export default {
                 }
             }
         }
+
         let nextWidth = sizeDirection[0] || keepRatio
             ? Math.max(startOffsetWidth + distWidth, TINY_NUM) : startOffsetWidth;
         let nextHeight = sizeDirection[1] || keepRatio
@@ -351,7 +346,6 @@ export default {
         const swapY = startOffsetHeight + distHeight < 0;
 
         if (keepRatio && startOffsetWidth && startOffsetHeight) {
-            // startOffsetWidth : startOffsetHeight = nextWidth : nextHeight
             if (isWidth) {
                 nextHeight = nextWidth / ratio;
             } else {
@@ -425,43 +419,35 @@ export default {
         if ((swapX || swapY) && canFlip) {
             let flipX = false;
             let flipY = false;
+            const rad = moveable.getRect().rotation * Math.PI / 180;
             
             if (swapY) {
-                console.log('swapY')
                 datas.direction[1] = -datas.direction[1];
                 datas.fixedDirection[1] = -datas.fixedDirection[1];
 
-                // -, 0 degree
-                datas.absoluteOrigin[1] += startOffsetHeight * sizeDirection[1];
-
-                // datas.absoluteOrigin = minus(datas.absoluteOrigin, [distX, distY]);
+                datas.absoluteOrigin[0] -= startOffsetHeight * Math.sin(-rad) * sizeDirection[1];
+                datas.absoluteOrigin[1] -= startOffsetHeight * Math.cos(-rad) * sizeDirection[1];
 
                 datas.startOffsetHeight = 0;
                 datas.prevHeight = 0;
                 datas.startHeight = 0;
 
                 flipY = true;
-                return;
             }  
             if (swapX) {
-                console.log('swapX')
                 datas.direction[0] = -datas.direction[0];
                 datas.fixedDirection[0] = -datas.fixedDirection[0];
 
-                // -, 0 degree
-                datas.absoluteOrigin[0] += startOffsetWidth * sizeDirection[0];
-
-                // datas.absoluteOrigin = minus(datas.absoluteOrigin, [distX, distY]);
+                datas.absoluteOrigin[0] -= startOffsetWidth * Math.cos(rad) * sizeDirection[0];
+                datas.absoluteOrigin[1] -= startOffsetWidth * Math.sin(rad) * sizeDirection[0];
 
                 datas.startOffsetWidth = 0;
                 datas.prevWidth = 0;
                 datas.startWidth = 0;
 
                 flipX = true;
-                return;
             }
             
-
             const params = fillParams<OnResizeFlip>(moveable, e, {
                 flipX,
                 flipY,
