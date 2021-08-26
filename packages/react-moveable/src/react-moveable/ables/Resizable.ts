@@ -484,7 +484,7 @@ export default {
             transformOrigin,
         );
 
-        if (!parentMoveable && delta.every(num => !num) && inverseDelta.every(num => !num)) {
+        if (!canFlip && !parentMoveable && delta.every(num => !num) && inverseDelta.every(num => !num)) {
             return;
         }
 
