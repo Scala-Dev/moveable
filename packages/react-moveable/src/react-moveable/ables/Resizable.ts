@@ -91,6 +91,7 @@ export default {
         !isPinch && setDragStart(moveable, e);
 
         datas.datas = {};
+        datas.startRad = moveable.getRect().rotation * Math.PI / 180;
         datas.direction = direction;
         datas.startOffsetWidth = width;
         datas.startOffsetHeight = height;
@@ -215,19 +216,20 @@ export default {
         } = e;
 
         const {
-            isResize,
-            transformOrigin,
-            fixedDirection,
             startWidth,
             startHeight,
             prevWidth,
             prevHeight,
+            startOffsetWidth,
+            startOffsetHeight,
+            isResize,
+            transformOrigin,
+            fixedDirection,
             minSize,
             maxSize,
             ratio,
             isWidth,
-            startOffsetWidth,
-            startOffsetHeight,
+            startRad,
         } = datas;
 
         const canFlip = moveable.props.canFlip &&  moveable.props.target !== null || false;
@@ -342,8 +344,8 @@ export default {
         let nextHeight = sizeDirection[1] || keepRatio
             ? Math.max(startOffsetHeight + distHeight, TINY_NUM) : startOffsetHeight;
 
-        const swapX = startOffsetWidth + distWidth < 0;
-        const swapY = startOffsetHeight + distHeight < 0;
+        const swapX = startOffsetWidth + distWidth < 0 && direction[0] !==0;
+        const swapY = startOffsetHeight + distHeight < 0 && direction[1] !== 0;
 
         if (keepRatio && startOffsetWidth && startOffsetHeight) {
             if (isWidth) {
@@ -415,18 +417,20 @@ export default {
                 nextHeight = throttle(nextHeight, throttleResize!);
             }
         }
+        // console.log(direction, datas.absoluteOrigin)
 
         if ((swapX || swapY) && canFlip) {
             let flipX = false;
             let flipY = false;
-            const rad = moveable.getRect().rotation * Math.PI / 180;
-            
+
+            console.log(startRad)
+
             if (swapY) {
                 datas.direction[1] = -datas.direction[1];
                 datas.fixedDirection[1] = -datas.fixedDirection[1];
 
-                datas.absoluteOrigin[0] -= startOffsetHeight * Math.sin(-rad) * sizeDirection[1];
-                datas.absoluteOrigin[1] -= startOffsetHeight * Math.cos(-rad) * sizeDirection[1];
+                datas.absoluteOrigin[0] -= startOffsetHeight * Math.sin(-startRad) * sizeDirection[1];
+                datas.absoluteOrigin[1] -= startOffsetHeight * Math.cos(-startRad) * sizeDirection[1];
 
                 datas.startOffsetHeight = 0;
                 datas.prevHeight = 0;
@@ -434,20 +438,21 @@ export default {
 
                 flipY = true;
             }  
+
             if (swapX) {
                 datas.direction[0] = -datas.direction[0];
                 datas.fixedDirection[0] = -datas.fixedDirection[0];
 
-                datas.absoluteOrigin[0] -= startOffsetWidth * Math.cos(rad) * sizeDirection[0];
-                datas.absoluteOrigin[1] -= startOffsetWidth * Math.sin(rad) * sizeDirection[0];
-
+                datas.absoluteOrigin[0] -= startOffsetWidth * Math.cos(startRad) * sizeDirection[0];
+                datas.absoluteOrigin[1] -= startOffsetWidth * Math.sin(startRad) * sizeDirection[0];
+                
                 datas.startOffsetWidth = 0;
                 datas.prevWidth = 0;
                 datas.startWidth = 0;
 
                 flipX = true;
             }
-            
+
             const params = fillParams<OnResizeFlip>(moveable, e, {
                 flipX,
                 flipY,
@@ -482,6 +487,7 @@ export default {
         if (!parentMoveable && delta.every(num => !num) && inverseDelta.every(num => !num)) {
             return;
         }
+
         const params = fillParams<OnResize>(moveable, e, {
             width: startWidth + distWidth,
             height: startHeight + distHeight,
