@@ -62,7 +62,8 @@ export default {
     canPinch: true,
     dragControl(
         moveable: MoveableManagerInterface<ResizableProps & DraggableProps & SnappableProps>,
-        e: any) {
+        e: any,
+    ) {
         const {
             datas,
             distX: distX_,
@@ -76,7 +77,7 @@ export default {
             parentDist,
             isRequest,
         } = e;
-
+  
         const { startOffsetWidth, startOffsetHeight } = datas;
         const {
             startWidth,
@@ -93,15 +94,15 @@ export default {
             startRad,
             startDeg,
         } = datas;
-
+  
         const canFlip =
-        (moveable.props.canFlip && moveable.props.target !== null) || false;
-
+            (moveable.props.canFlip && moveable.props.target !== null) || false;
+    
         const distX = distX_ + (canFlip ? datas.flipOffsets[0] : 0);
         const distY = distY_ + (canFlip ? datas.flipOffsets[1] : 0);
-
+  
         if (!isResize) return;
-
+  
         const {
             throttleResize = 0,
             parentMoveable,
@@ -111,12 +112,12 @@ export default {
         let sizeDirection = direction;
         let distWidth = 0;
         let distHeight = 0;
-
+  
         if (!direction[0] && !direction[1]) sizeDirection = [1, 1];
-
+  
         const keepRatio = ratio && (moveable.props.keepRatio || parentKeepRatio);
         let fixedPosition = dragClient;
-
+  
         if (!dragClient) {
             if (!parentFlag && isPinch) {
                 fixedPosition = getAbsolutePosition(moveable, [0, 0]);
@@ -124,11 +125,11 @@ export default {
                 fixedPosition = datas.fixedPosition;
             }
         }
-
+  
         if (parentDist) {
             distWidth = parentDist[0];
             distHeight = parentDist[1];
-
+      
             if (keepRatio) {
                 if (!distWidth) {
                     distWidth = distHeight * ratio;
@@ -150,16 +151,16 @@ export default {
                 distX,
                 distY,
             });
-
+  
             distWidth = sizeDirection[0] * dist[0];
             distHeight = sizeDirection[1] * dist[1];
-
+  
             if (keepRatio && startOffsetWidth && startOffsetHeight) {
                 const rad = getRad([0, 0], dist);
                 const standardRad = getRad([0, 0], sizeDirection);
                 const size = getDistSize([distWidth, distHeight]);
                 const signSize = Math.cos(rad - standardRad) * size;
-
+  
                 if (!sizeDirection[0]) {
                     // top, bottom
                     distHeight = signSize;
@@ -169,21 +170,36 @@ export default {
                     distWidth = signSize;
                     distHeight = distWidth * ratio;
                 } else {
-                    // two-way
+                    // two - way;
                     const startWidthSize = sizeDirection[0] * 2 * startOffsetWidth;
                     const startHeightSize = sizeDirection[1] * 2 * startOffsetHeight;
+          
                     const distSize =
                         getDistSize([startWidthSize + dist[0], startHeightSize + dist[1]]) -
                         getDistSize([startWidthSize, startHeightSize]);
                     const ratioRad = getRad([0, 0], [ratio, 1]);
-
-                    distWidth = Math.cos(ratioRad) * distSize;
-                    distHeight = Math.sin(ratioRad) * distSize;
+          
+                    const coe = datas.flipXCount > 0 ? -1 : 1;
+                    const xOffsetDirection =
+                        !canFlip || datas.flipXCount === 0
+                            ? 1
+                            : distWidth >= 0
+                                ? -coe
+                                : coe;
+                    const yOffsetDirection =
+                        !canFlip || datas.flipYCount === 0
+                            ? 1
+                            : distHeight >= 0
+                                ? -coe
+                                : coe;
+  
+                    distWidth = Math.cos(ratioRad) * distSize * xOffsetDirection;
+                    distHeight = Math.sin(ratioRad) * distSize * yOffsetDirection;
                 }
             } else if (!keepRatio) {
                 if (!canFlip) {
                     const nextDirection = [...direction];
-
+  
                     if (!startOffsetWidth) {
                         if (dist[0] < 0) {
                             nextDirection[0] = -1;
@@ -199,26 +215,26 @@ export default {
                         }
                     }
                     direction = nextDirection;
-
+  
                     sizeDirection = nextDirection;
                     distWidth = sizeDirection[0] * dist[0];
                     distHeight = sizeDirection[1] * dist[1];
                 }
             }
         }
-
+  
         let nextWidth =
-          sizeDirection[0] || keepRatio
-              ? Math.max(startOffsetWidth + distWidth, TINY_NUM)
-              : startOffsetWidth;
+            sizeDirection[0] || keepRatio
+                ? Math.max(startOffsetWidth + distWidth, TINY_NUM)
+                : startOffsetWidth;
         let nextHeight =
-          sizeDirection[1] || keepRatio
-              ? Math.max(startOffsetHeight + distHeight, TINY_NUM)
-              : startOffsetHeight;
-
+            sizeDirection[1] || keepRatio
+                ? Math.max(startOffsetHeight + distHeight, TINY_NUM)
+                : startOffsetHeight;
+    
         const swapX = startOffsetWidth + distWidth < 0 && direction[0] !== 0;
         const swapY = startOffsetHeight + distHeight < 0 && direction[1] !== 0;
-
+    
         if (keepRatio && startOffsetWidth && startOffsetHeight) {
             if (isWidth) {
                 nextHeight = nextWidth / ratio;
@@ -226,9 +242,9 @@ export default {
                 nextWidth = nextHeight * ratio;
             }
         }
-
+  
         let snapDist = [0, 0];
-
+  
         if (!isPinch) {
             snapDist = checkSnapResize(
                 moveable,
@@ -253,7 +269,7 @@ export default {
                 }
             }
             const isNoSnap = !snapDist[0] && !snapDist[1];
-
+  
             if (isNoSnap) {
                 if (isWidth) {
                     nextWidth = throttle(nextWidth, throttleResize!);
@@ -283,10 +299,10 @@ export default {
             if (startOffsetWidth + distHeight < -snapThreshold) {
                 snapDist[1] = 0;
             }
-
+  
             nextWidth += snapDist[0];
             nextHeight += snapDist[1];
-
+  
             if (!snapDist[0]) {
                 nextWidth = throttle(nextWidth, throttleResize!);
             }
@@ -294,97 +310,124 @@ export default {
                 nextHeight = throttle(nextHeight, throttleResize!);
             }
         }
-
+  
         if ((swapX || swapY) && canFlip) {
             let flipX = false;
             let flipY = false;
-
+            const xPos = datas.is3d ? 6 : 8;
+            const yPos = xPos + 1;
+  
             if (swapY) {
                 datas.direction[1] = -datas.direction[1];
                 datas.fixedDirection[1] = -datas.fixedDirection[1];
-
+  
                 const xOffset =
                     startOffsetHeight * Math.sin(-startRad) * sizeDirection[1];
                 const yOffset =
                     startOffsetHeight * Math.cos(-startRad) * sizeDirection[1];
-
+  
                 if (datas.flipYCount === 0) {
                     datas.flipOffsets[1] -= yOffset;
                     datas.flipOffsets[0] -= xOffset;
                 }
-
-                datas.startHeight = 0;
-                datas.startOffsetHeight = 0;
-                datas.prevHeight = 0;
-
-                datas.absoluteOrigin[1] += yOffset / 2;   
-
+  
+                if (keepRatio) {
+                    datas.startHeight = 0;
+                    datas.startOffsetHeight = 1;
+                    datas.prevHeight = 1;
+          
+                    datas.startWidth = ratio;
+                    datas.startOffsetWidth = ratio;
+                    datas.prevWidth = 0;
+                } else {
+                    datas.startHeight = 0;
+                    datas.startOffsetHeight = 0;
+                    datas.prevHeight = 0;
+                }
+  
+                datas.absoluteOrigin[1] += yOffset / 2;
+  
                 if (startDeg % 90 === 0) {
                     datas.startDragBeforeDist[1] += yOffset / 2;
                     datas.startDragDist[1] += yOffset / 2;
+  
                     if (startDeg !== 0) {
-                        datas.inverseMatrix[7] += yOffset;
-                        datas.matrix[7] += yOffset;
-                        datas.inverseMatrix[6] += xOffset;
-                        datas.matrix[6] += xOffset;
+                        if (!keepRatio && !(startDeg === 90 || startDeg === 270)) {
+                            datas.inverseMatrix[yPos] += yOffset;
+                            datas.matrix[yPos] += yOffset;
+                            datas.inverseMatrix[xPos] += xOffset;
+                            datas.matrix[xPos] += xOffset;
+                        }
                     }
                 } else {
                     datas.absoluteOrigin[0] += xOffset / 2;
                     datas.startDragBeforeDist[1] += yOffset / 2 / Math.cos(-startRad);
                     datas.startDragDist[1] += yOffset / 2 / Math.cos(-startRad);
                 }
-
+  
                 flipY = true;
                 datas.flipYCount++;
             }
-
+  
             if (swapX) {
                 datas.direction[0] = -datas.direction[0];
                 datas.fixedDirection[0] = -datas.fixedDirection[0];
-
+  
                 const xOffset =
                     startOffsetWidth * Math.cos(startRad) * sizeDirection[0];
                 const yOffset =
                     startOffsetWidth * Math.sin(startRad) * sizeDirection[0];
-
+  
                 if (datas.flipXCount === 0) {
                     datas.flipOffsets[0] -= xOffset;
                     datas.flipOffsets[1] -= yOffset;
                 }
                 datas.absoluteOrigin[0] += xOffset / 2;
-
-                datas.startWidth = 0;
-                datas.startOffsetWidth = 0;
-                datas.prevWidth = 0;
-
+  
+                if (keepRatio) {
+                    datas.startHeight = 0;
+                    datas.startOffsetHeight = ratio;
+                    datas.prevHeight = ratio;
+          
+                    datas.startWidth = 1;
+                    datas.startOffsetWidth = 1;
+                    datas.prevWidth = 0;
+                } else {
+                    datas.startWidth = 0;
+                    datas.startOffsetWidth = 0;
+                    datas.prevWidth = 0;
+                }
+  
                 if (startDeg % 90 === 0) {
                     datas.startDragBeforeDist[0] += xOffset / 2;
                     datas.startDragDist[0] += xOffset / 2;
                     if (startDeg !== 0) {
-                        datas.inverseMatrix[7] += yOffset;
-                        datas.matrix[7] += yOffset;
-                        datas.inverseMatrix[6] += xOffset;
-                        datas.matrix[6] += xOffset;
+                        if (!keepRatio && !(startDeg === 90 || startDeg === 270)) {
+                            datas.inverseMatrix[yPos] += yOffset;
+                            datas.matrix[yPos] += yOffset;
+                            datas.inverseMatrix[xPos] += xOffset;
+                            datas.matrix[xPos] += xOffset;
+                        }
                     }
                 } else {
                     datas.absoluteOrigin[1] += yOffset / 2;
                     datas.startDragBeforeDist[0] += xOffset / 2 / Math.cos(startRad);
                     datas.startDragDist[0] += xOffset / 2 / Math.cos(startRad);
                 }
-
+  
                 flipX = true;
                 datas.flipXCount++;
             }
-
+  
             const params = fillParams<OnResizeFlip>(moveable, e, {
                 flipX,
                 flipY,
             });
             triggerEvent<ResizableProps>(moveable, 'onResizeFlip', params);
-
+  
             return;
         }
-
+  
         // bounding restriction
         [nextWidth, nextHeight] = calculateBoundSize(
             [nextWidth, nextHeight],
@@ -392,18 +435,18 @@ export default {
             maxSize,
             keepRatio,
         );
-
+  
         nextWidth = Math.round(nextWidth);
         nextHeight = Math.round(nextHeight);
-
+    
         distWidth = nextWidth - startOffsetWidth;
         distHeight = nextHeight - startOffsetHeight;
-
+    
         const delta = [distWidth - prevWidth, distHeight - prevHeight];
-
+    
         datas.prevWidth = distWidth;
         datas.prevHeight = distHeight;
-
+  
         const inverseDelta = getResizeDist(
             moveable,
             nextWidth,
@@ -412,7 +455,7 @@ export default {
             fixedPosition,
             transformOrigin,
         );
-
+  
         if (
             !parentMoveable &&
             delta.every((num) => !num) &&
@@ -420,7 +463,7 @@ export default {
         ) {
             return;
         }
-
+  
         const params = fillParams<OnResize>(moveable, e, {
             delta,
             direction,
@@ -435,9 +478,9 @@ export default {
             offsetWidth: nextWidth,
             width: startWidth + distWidth,
         });
-
+  
         triggerEvent<ResizableProps>(moveable, 'onResize', params);
-
+  
         return params;
     },
     dragControlAfter(
