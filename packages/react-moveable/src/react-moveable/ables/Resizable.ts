@@ -314,7 +314,7 @@ export default {
         if ((swapX || swapY) && canFlip) {
             let flipX = false;
             let flipY = false;
-            const xPos = datas.is3d ? 6 : 8;
+            const xPos = datas.is3d ? 8 : 6;
             const yPos = xPos + 1;
   
             if (swapY) {
@@ -351,13 +351,11 @@ export default {
                     datas.startDragBeforeDist[1] += yOffset / 2;
                     datas.startDragDist[1] += yOffset / 2;
   
-                    if (startDeg !== 0) {
-                        if (!keepRatio && !(startDeg === 90 || startDeg === 270)) {
-                            datas.inverseMatrix[yPos] += yOffset;
-                            datas.matrix[yPos] += yOffset;
-                            datas.inverseMatrix[xPos] += xOffset;
-                            datas.matrix[xPos] += xOffset;
-                        }
+                    if (startDeg === 180) {
+                        datas.inverseMatrix[yPos] += yOffset;
+                        datas.matrix[yPos] += yOffset;
+                        datas.inverseMatrix[xPos] += xOffset;
+                        datas.matrix[xPos] += xOffset;
                     }
                 } else {
                     datas.absoluteOrigin[0] += xOffset / 2;
@@ -401,13 +399,11 @@ export default {
                 if (startDeg % 90 === 0) {
                     datas.startDragBeforeDist[0] += xOffset / 2;
                     datas.startDragDist[0] += xOffset / 2;
-                    if (startDeg !== 0) {
-                        if (!keepRatio && !(startDeg === 90 || startDeg === 270)) {
-                            datas.inverseMatrix[yPos] += yOffset;
-                            datas.matrix[yPos] += yOffset;
-                            datas.inverseMatrix[xPos] += xOffset;
-                            datas.matrix[xPos] += xOffset;
-                        }
+                    if (startDeg === 180) {
+                        datas.inverseMatrix[yPos] += yOffset;
+                        datas.matrix[yPos] += yOffset;
+                        datas.inverseMatrix[xPos] += xOffset;
+                        datas.matrix[xPos] += xOffset;
                     }
                 } else {
                     datas.absoluteOrigin[1] += yOffset / 2;
