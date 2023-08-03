@@ -19,10 +19,12 @@ function getMinPos(poses: number[][][], index: number) {
         return Math.min(pos1[index], pos2[index], pos3[index], pos4[index]);
     }));
 }
-function getGroupRect(moveables: MoveableManager[], rotation: number) {
-    if (!moveables.length) {
+function getGroupRect(moveables_: MoveableManager[], rotation: number) {
+    if (!moveables_.length) {
         return [0, 0, 0, 0];
     }
+
+    const moveables = moveables_.filter(moveable => !moveable.props.target?.classList.contains('mask-group-ignore'));
 
     const moveablePoses = moveables.map(({ state }) => getAbsolutePosesByState(state));
     let minX = MAX_NUM;

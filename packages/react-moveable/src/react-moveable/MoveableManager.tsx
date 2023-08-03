@@ -100,7 +100,9 @@ export default class MoveableManager<T = {}>
         const { left: parentLeft, top: parentTop } = parentPosition! || { left: 0, top: 0 };
         const { left, top, target: stateTarget, direction, renderPoses } = state;
         const groupTargets = (props as any).targets;
-        const isDisplay = ((groupTargets && groupTargets.length) || propsTarget) && stateTarget;
+        const isDisplay = ((groupTargets && groupTargets.length)
+            || (propsTarget && !propsTarget?.classList?.contains('mask-group-ignore')))
+            && stateTarget;
         const isDragging = this.isDragging();
         const ableAttributes: IObject<boolean> = {};
         const Renderer = {

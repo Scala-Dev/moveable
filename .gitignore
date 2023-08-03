@@ -21,3 +21,4 @@ statistics/
 demo/storybook
 demo/storybook2
 dist/
+.idea/
